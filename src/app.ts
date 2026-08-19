@@ -66,7 +66,21 @@ const app = express();
  */
 
 // this adds security headers
-app.use(helmet());
+// the Content Security Policy is relaxed for the Swagger API docs so it can load
+// the Swagger UI assets from the CDN and run its inline init script
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        "connect-src": ["'self'", "https://cdn.jsdelivr.net"],
+        "img-src": ["'self'", "data:", "https://cdn.jsdelivr.net"],
+      },
+    },
+  })
+);
 
 // this enables CORS for the web and mobile clients
 app.use(cors());
