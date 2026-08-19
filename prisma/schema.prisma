@@ -1,0 +1,118 @@
+// this is the Prisma schema for the Sales Force Automation system
+// this database is hosted on Supabase (PostgreSQL)
+// users, distributors and sales users are all stored in one User table
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// this enum represents the three roles in the system
+enum Role {
+  SALES
+  DISTRIBUTOR
+  SUPER_ADMIN
+}
+
+// this enum represents the three request statuses
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// this is the user table for all three roles
+// a sales user has distributorId set, other roles have it null
+model User {
+  id           String   @id @default(cuid())
+  authId       String   @unique @map("auth_id")
+  email        String   @unique
+  name         String
+  role         Role
+  phone        String?
+  avatarUrl    String?  @map("avatar_url")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  // this is the self relation for sales user -> distributor
+  distributorId String? @map("distributor_id")
+  distributor   User?    @relation("DistributorSalesUsers", fields: [distributorId], references: [id], onDelete: SetNull)
+  salesUsers    User[]   @relation("DistributorSalesUsers")
+
+  // this is the relation for requests submitted by a sales user
+  submittedRequests Request[] @relation("RequestSalesUser")
+  // this is the relation for requests received by a distributor
+  receivedRequests  Request[] @relation("RequestDistributor")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// this is the product table
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String?  @unique
+  description String?
+  unit        String?
+  isActive    Boolean  @default(true) @map("is_active")
+
+  // this is the relation to request items
+  requestItems RequestItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+// this is the request table, submitted by a sales user to their distributor
+model Request {
+  id          String        @id @default(cuid())
+  status      RequestStatus @default(PENDING)
+
+  // this references the sales user who submitted the request
+  salesUserId String @map("sales_user_id")
+  salesUser   User   @relation("RequestSalesUser", fields: [salesUserId], references: [id])
+
+  // this references the distributor responsible for the request
+  distributorId String @map("distributor_id")
+  distributor   User   @relation("RequestDistributor", fields: [distributorId], references: [id])
+
+  // this is the note a distributor may add on approve/reject
+  reviewNote String? @map("review_note")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  // this is the relation to request line items
+  items RequestItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([salesUserId])
+  @@index([distributorId])
+  @@index([status])
+  @@map("requests")
+}
+
+// this is a line item within a request (a product + quantity)
+model RequestItem {
+  id        String @id @default(cuid())
+  requestId String @map("request_id")
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("request_items")
+}
