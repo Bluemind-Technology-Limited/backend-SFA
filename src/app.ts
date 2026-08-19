@@ -3,20 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import swaggerUi from 'swagger-ui-express';
-import { createRequire } from 'module';
-import { dirname } from 'path';
 import { apiRoutes } from './routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { notFoundHandler } from './middleware/not-found.middleware.js';
 import { swaggerSpec } from './config/swagger.js';
-
-// this creates a require function to resolve node_modules paths in ESM context
-const require = createRequire(import.meta.url);
-
-// this resolves the directory of the swagger-ui-dist package (contains the JS/CSS assets)
-// swagger-ui-dist is a direct dependency to ensure it is available on Vercel
-const swaggerUiDistDir = dirname(require.resolve('swagger-ui-dist/package.json'));
 
 // this creates the Express app instance
 const app = express();
@@ -106,25 +96,46 @@ app.get('/health', (_req, res) => {
 });
 
 // this serves the Swagger documentation UI
-// swaggerUi.serve mounts the static assets and the swagger-ui-init.js handler
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// this uses a fully custom HTML page with CDN assets, avoiding serverless
+// static-file issues with the swagger-ui-express serve middleware
+const swaggerHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SFA Backend API Documentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+  <style>
+    body { margin: 0; }
+    .swagger-ui .topbar { display: none; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function () {
+      const spec = ${JSON.stringify(swaggerSpec)};
+      window.ui = SwaggerUIBundle({
+        spec: spec,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: 'StandaloneLayout'
+      });
+    };
+  </script>
+</body>
+</html>`;
 
-// this explicitly serves the Swagger UI static assets with correct MIME types
-// this fixes the Vercel issue where the catch-all route returns text/html for assets
-app.use(
-  '/api-docs',
-  express.static(swaggerUiDistDir, {
-    index: false,
-    setHeaders: (res, filePath) => {
-      // this sets the correct content type for JavaScript and CSS files
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css; charset=UTF-8');
-      }
-    },
-  })
-);
+// this serves the custom Swagger UI HTML page
+app.get('/api-docs', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(swaggerHtml);
+});
 
 // this mounts all API routes under /api
 app.use('/api', apiRoutes);
