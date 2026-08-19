@@ -15,6 +15,7 @@ import { swaggerSpec } from './config/swagger.js';
 const require = createRequire(import.meta.url);
 
 // this resolves the directory of the swagger-ui-dist package (contains the JS/CSS assets)
+// swagger-ui-dist is a direct dependency to ensure it is available on Vercel
 const swaggerUiDistDir = dirname(require.resolve('swagger-ui-dist/package.json'));
 
 // this creates the Express app instance
