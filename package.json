@@ -6,9 +6,10 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc",
+    "build": "pnpm swagger:generate && prisma generate && tsc",
     "start": "tsx src/server.ts",
-    "vercel-build": "prisma generate && tsc",
+    "vercel-build": "pnpm swagger:generate && prisma generate && tsc",
+    "swagger:generate": "tsx scripts/generate-swagger.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",

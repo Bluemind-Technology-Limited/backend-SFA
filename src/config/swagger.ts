@@ -1,10 +1,13 @@
-// this configures Swagger OpenAPI documentation for the SFA backend
+// this provides the Swagger spec for the API documentation UI
+// it uses a pre-generated static JSON file (committed and bundled at build time)
 import swaggerJsdoc from 'swagger-jsdoc';
 import type { Options } from 'swagger-jsdoc';
 import { env } from './env.js';
+import swaggerJson from '../swagger.json';
 
-// this is the Swagger options object
-const swaggerOptions: Options = {
+// this is the Swagger options object for dynamic generation
+// it is exported so the build-time generate script can reuse it
+export const swaggerOptions: Options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -196,5 +199,7 @@ const swaggerOptions: Options = {
   ],
 };
 
-// this generates the Swagger specification object
-export const swaggerSpec = swaggerJsdoc(swaggerOptions);
+// this uses the pre-generated static spec (bundled at build time)
+// the JSON is statically imported so Vercel's bundler includes it
+// and there is no runtime file-globbing dependency
+export const swaggerSpec = swaggerJson as Record<string, unknown>;
