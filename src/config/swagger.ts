@@ -3,7 +3,7 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import type { Options } from 'swagger-jsdoc';
 import { env } from './env.js';
-import swaggerJson from '../swagger.json';
+import swaggerJson from '../swagger.json' with { type: 'json' };
 
 // this is the Swagger options object for dynamic generation
 // it is exported so the build-time generate script can reuse it
