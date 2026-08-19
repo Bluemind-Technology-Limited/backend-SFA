@@ -11,6 +11,10 @@ export const env = {
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
+  qstashUrl: process.env.QSTASH_URL ?? '',
+  qstashToken: process.env.QSTASH_TOKEN ?? '',
+  qstashCurrentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY ?? '',
+  qstashNextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY ?? '',
 };
 
 // this throws early if required variables are missing in production

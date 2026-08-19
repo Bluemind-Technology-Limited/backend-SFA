@@ -6,6 +6,7 @@ import { distributorRoutes } from '../modules/distributors/distributor.routes.js
 import { productRoutes } from '../modules/products/product.routes.js';
 import { requestRoutes } from '../modules/requests/request.routes.js';
 import { dashboardRoutes } from '../modules/dashboard/dashboard.routes.js';
+import { jobRoutes } from '../modules/jobs/job.routes.js';
 
 // this creates the root router
 const router = Router();
@@ -17,5 +18,6 @@ router.use('/distributors', distributorRoutes);
 router.use('/products', productRoutes);
 router.use('/requests', requestRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/jobs', jobRoutes);
 
 export const apiRoutes = router;
