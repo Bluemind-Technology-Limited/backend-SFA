@@ -36,6 +36,36 @@ const app = express();
  *                   example: SFA backend is running.
  */
 
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     summary: API root
+ *     description: Returns basic API information and useful links.
+ *     tags:
+ *       - Root
+ *     responses:
+ *       200:
+ *         description: API information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: SFA Backend API
+ *                 docs:
+ *                   type: string
+ *                   example: /api-docs
+ *                 health:
+ *                   type: string
+ *                   example: /health
+ */
+
 // this adds security headers
 app.use(helmet());
 
@@ -49,6 +79,17 @@ app.use(express.json());
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
+
+// this is the root route for the base URL
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'SFA Backend API',
+    version: '1.0.0',
+    docs: '/api-docs',
+    health: '/health',
+  });
+});
 
 // this is a health check endpoint
 app.get('/health', (_req, res) => {
